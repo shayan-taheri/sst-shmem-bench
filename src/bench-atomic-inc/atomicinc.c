@@ -60,11 +60,16 @@ int main(int argc, char* argv[]) {
 		printf("Performing %d updates per PE across the domain...\n", updates);
 	}
 
-	srand( me << me );
+	srand( (unsigned int) (start.tv_usec) );
 
 	for( int j = 0; j < iterations; ++j) {
 		for( int i = 0; i < updates; ++i ) {
-			const int pe   = rand() % pecount;
+			int pe   = rand() % pecount;
+
+			while( pe == me ) {
+				pe = rand () % pecount;
+			}
+
 			const int addr = rand() % data_size;
 
 			shmem_longlong_inc( &data[addr], pe );
