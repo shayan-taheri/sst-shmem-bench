@@ -6,6 +6,9 @@
 
 #include <shmem.h>
 
+#ifdef USE_SNL_RANDOM
+#include "xorrand.h"
+#endif
 
 #define GUPS_DEFAULT_DATA_ITEMS 32 * 1024 * 1024
 #define GUPS_DEFAULT_UPDATES    4096
@@ -60,17 +63,34 @@ int main(int argc, char* argv[]) {
 		printf("Performing %d updates per PE across the domain...\n", updates);
 	}
 
-	srand( (unsigned int) (start.tv_usec) );
+	#ifdef USE_SNL_RANDOM
+		snl_random randNum;
+		seed_random(&randNum, (unsigned int) (start.tv_usec));
+	#else
+		srand( (unsigned int) (start.tv_usec) );
+	#endif
 
 	for( int j = 0; j < iterations; ++j) {
 		for( int i = 0; i < updates; ++i ) {
-			int pe   = rand() % pecount;
+			#ifdef USE_SNL_RANDOM
+				int pe   = (int) (next_rand_u32(&randNum) % pecount);
+			#else
+				int pe   = rand() % pecount;
+			#endif
 
 			while( pe == me ) {
-				pe = rand () % pecount;
+				#ifdef USE_SNL_RANDOM
+					pe   = (int) (next_rand_u32(&randNum) % pecount);
+				#else
+					pe   = rand() % pecount;
+				#endif
 			}
 
-			const int addr = rand() % data_size;
+			#ifdef USE_SNL_RANDOM
+				const int addr = (int) (next_rand_u32(&randNum) % data_size);
+			#else
+				const int addr = rand() % data_size;
+			#endif
 
 			shmem_longlong_inc( &data[addr], pe );
 		}
