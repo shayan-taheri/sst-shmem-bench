@@ -76,9 +76,10 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	gettimeofday( &end, NULL );
-
+	// Barrier to make sure all of the updates were completed
 	shmem_barrier_all();
+
+	gettimeofday( &end, NULL );
 
 	if( 0 == me ) {
 		double startSeconds = start.tv_sec + ( (double) start.tv_usec ) * 1.0e-6;
